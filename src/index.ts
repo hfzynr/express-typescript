@@ -1,28 +1,78 @@
 import express from 'express';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
 const PORT = 5000;
+const prisma = new PrismaClient();
+
+app.use(express.json());
 
 // CREATE
-app.post('/users', (req, res, next) => {
-    res.json({message: 'Users created'})
+app.post('/users', async (req, res, next) => {
+    const {name, email, address} = req.body;
+
+    const result = await prisma.users.create({
+        data: {
+            name: name,
+            email: email,
+            address: address
+        }
+    })
+    res.json({
+        data: result,
+        message: `Users crated`
+    })
 })
 
 // READ
-app.get('/users', (req, res) => {
-    res.json({message: 'Users lists'})
+app.get('/users', async (req, res) => {
+    const result = await prisma.users.findMany({
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            address: true
+        }
+    })
+    res.json({
+        data: result,
+        message: `User List`
+    })
 })
 
 // UPDATE
-app.patch('/users/:id', (req, res) => {
+app.patch('/users/:id', async (req, res) => {
     const {id} = req.params
-    res.json({message: `User ${id} updated`})
+    const {name, email, address} = req.body;
+    
+    const result = await prisma.users.update({
+        data:{
+            name: name,
+            email: email,
+            address: address,
+        },
+        where: {
+            id: Number(id)
+        }
+    })
+    res.json({
+        data: result,
+        message: `User ${id} updated`
+    })
 })
 
 // DELETE
-app.delete('/users/:id', (req, res) => {
+app.delete('/users/:id', async (req, res) => {
     const {id} = req.params;
-    res.json({message: `User ${id} deleted`})
+
+    const result = await prisma.users.delete({
+        where: {
+            id: Number(id)
+        }
+    })
+    res.json({
+        message: `User ${id} deleted`
+    })
 })
 
 app.listen(PORT, () => {
